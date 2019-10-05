@@ -95,3 +95,46 @@ func Text(node *html.Node) (string, error) {
 	err := WriteText(buf, node)
 	return buf.String(), err
 }
+
+// Prune returns a copy of `node` and its children,
+// minus any subnodes that cause the supplied predicate to return true.
+// If `node` itself is pruned, the return value is nil.
+func Prune(node *html.Node, pred func(*html.Node) bool) *html.Node {
+	if pred(node) {
+		return nil
+	}
+
+	var children []*html.Node
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		pruned := Prune(child, pred)
+		if pruned == nil {
+			continue
+		}
+		children = append(children, pruned)
+	}
+
+	for i, child := range children {
+		if i == 0 {
+			child.PrevSibling = nil
+		} else {
+			child.PrevSibling = children[i-1]
+		}
+
+		if i == len(children)-1 {
+			child.NextSibling = nil
+		} else {
+			child.NextSibling = children[i+1]
+		}
+	}
+
+	result := *node
+	if len(children) > 0 {
+		result.FirstChild = children[0]
+		result.LastChild = children[len(children)-1]
+	} else {
+		result.FirstChild = nil
+		result.LastChild = nil
+	}
+
+	return &result
+}
