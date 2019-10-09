@@ -62,6 +62,7 @@ func ElClassContains(node *html.Node, probe string) bool {
 // WriteText converts the content of the tree rooted at `node` into plain text
 // and writes it to `w`.
 // HTML entities are decoded,
+// <script> and <style> nodes are pruned,
 // and <br> nodes are turned into newlines.
 func WriteText(w io.Writer, node *html.Node) error {
 	switch node.Type {
@@ -72,15 +73,20 @@ func WriteText(w io.Writer, node *html.Node) error {
 		}
 
 	case html.ElementNode:
-		if node.DataAtom == atom.Br {
+		switch node.DataAtom {
+		case atom.Br:
 			_, err := w.Write([]byte("\n"))
 			return err
+
+		case atom.Script, atom.Style:
+			return nil
 		}
-		for child := node.FirstChild; child != nil; child = child.NextSibling {
-			err := WriteText(w, child)
-			if err != nil {
-				return err
-			}
+	}
+
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		err := WriteText(w, child)
+		if err != nil {
+			return err
 		}
 	}
 
