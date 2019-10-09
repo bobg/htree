@@ -11,7 +11,7 @@ import (
 )
 
 // Find finds the first node,
-// in a breadth-first search of the tree rooted at `node`,
+// in a depth-first search of the tree rooted at `node`,
 // satisfying the given predicate.
 func Find(node *html.Node, pred func(*html.Node) bool) *html.Node {
 	if pred(node) {
@@ -29,12 +29,31 @@ func Find(node *html.Node, pred func(*html.Node) bool) *html.Node {
 }
 
 // FindEl finds the first `ElementNode`-typed node,
-// in a breadth-first search of the tree rooted at `node`,
+// in a depth-first search of the tree rooted at `node`,
 // satisfying the given predicate.
 func FindEl(node *html.Node, pred func(*html.Node) bool) *html.Node {
 	return Find(node, func(n *html.Node) bool {
 		return n.Type == html.ElementNode && pred(n)
 	})
+}
+
+// Walk applies f to each node in a recursive, preorder, depth-first walk of `node`.
+// If any call to f produces an error, the walk is aborted and the error returned.
+func Walk(node *html.Node, f func(*html.Node) error) error {
+	err := f(node)
+	if err != nil {
+		return err
+	}
+	if node.Type == html.TextNode {
+		return nil
+	}
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		err = Walk(child, f)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ElAttr returns `node`'s value for the attribute `key`.
