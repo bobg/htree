@@ -32,9 +32,7 @@ func Find(node *html.Node, pred func(*html.Node) bool) *html.Node {
 // in a depth-first search of the tree rooted at `node`,
 // satisfying the given predicate.
 func FindEl(node *html.Node, pred func(*html.Node) bool) *html.Node {
-	return Find(node, func(n *html.Node) bool {
-		return n.Type == html.ElementNode && pred(n)
-	})
+	return Find(node, elPred(pred))
 }
 
 // Walk applies f to each node in a recursive, preorder, depth-first walk of `node`.
@@ -54,6 +52,56 @@ func Walk(node *html.Node, f func(*html.Node) error) error {
 		}
 	}
 	return nil
+}
+
+// FindAll walks the tree rooted at `node` in preorder, depth-first fashion.
+// It tests each node in the tree with `pred`.
+// Any node that passes the test causes FindAll to
+//   (a) call `f` on the node and
+//   (b) skip walking the node's subtree.
+// If any call to `f` returns an error, FindAll aborts the walk and returns the error.
+// To continue walking the subtree of a node `n` that passes `pred`,
+// call FindAllChildren(n, pred, f) in the body of `f`.
+func FindAll(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
+	if pred(node) {
+		return f(node)
+	}
+	return FindAllChildren(node, pred, f)
+}
+
+// FindAllChildren is the same as FindAll but operates only on the children of `node`, not `node` itself.
+func FindAllChildren(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
+	if node.Type == html.TextNode {
+		return nil
+	}
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		err := FindAll(child, pred, f)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// FindAllEls is like FindAll but calls `pred`, and perhaps `f`,
+// only for nodes with type `ElementNode`.
+// To continue walking the subtree of a node `n` that passes `pred`,
+// call FindAllChildEls(n, pred, f) in the body of `f`.
+func FindAllEls(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
+	return FindAll(node, elPred(pred), f)
+}
+
+// FindAllChildEls is like FindAllEls but operates only on the children of `node`, not `node` itself.
+func FindAllChildEls(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
+	return FindAllChildren(node, elPred(pred), f)
+}
+
+// elPred takes a predicate function of a node and returns a new predicate
+// that is true only if the node has type `ElementNode` and passes the original predicate.
+func elPred(pred func(*html.Node) bool) func(*html.Node) bool {
+	return func(n *html.Node) bool {
+		return n.Type == html.ElementNode && pred(n)
+	}
 }
 
 // ElAttr returns `node`'s value for the attribute `key`.
