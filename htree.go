@@ -57,9 +57,11 @@ func Walk(node *html.Node, f func(*html.Node) error) error {
 // FindAll walks the tree rooted at `node` in preorder, depth-first fashion.
 // It tests each node in the tree with `pred`.
 // Any node that passes the test causes FindAll to
-//   (a) call `f` on the node and
-//   (b) skip walking the node's subtree.
+// (a) call `f` on the node, and
+// (b) skip walking the node's subtree.
+//
 // If any call to `f` returns an error, FindAll aborts the walk and returns the error.
+//
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call FindAllChildren(n, pred, f) in the body of `f`.
 func FindAll(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
@@ -85,13 +87,14 @@ func FindAllChildren(node *html.Node, pred func(*html.Node) bool, f func(*html.N
 
 // FindAllEls is like FindAll but calls `pred`, and perhaps `f`,
 // only for nodes with type `ElementNode`.
+//
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call FindAllChildEls(n, pred, f) in the body of `f`.
 func FindAllEls(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
 	return FindAll(node, elPred(pred), f)
 }
 
-// FindAllChildEls is like FindAllEls but operates only on the children of `node`, not `node` itself.
+// FindAllChildEls is the same as FindAllEls but operates only on the children of `node`, not `node` itself.
 func FindAllChildEls(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
 	return FindAllChildren(node, elPred(pred), f)
 }
