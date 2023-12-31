@@ -3,6 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/bobg/htree.svg)](https://pkg.go.dev/github.com/bobg/htree)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bobg/htree)](https://goreportcard.com/report/github.com/bobg/htree)
 [![Tests](https://github.com/bobg/htree/actions/workflows/go.yml/badge.svg)](https://github.com/bobg/htree/actions/workflows/go.yml)
+[![Coverage Status](https://coveralls.io/repos/github/bobg/htree/badge.svg?branch=master)](https://coveralls.io/github/bobg/htree?branch=master)
 
 This is htree,
 a Go package that helps traverse, navigate, filter, and otherwise process trees of [html.Node](https://pkg.go.dev/golang.org/x/net/html#Node) objects.
