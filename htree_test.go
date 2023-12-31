@@ -2,10 +2,13 @@ package htree
 
 import (
 	"fmt"
+	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 func TestText(t *testing.T) {
@@ -13,6 +16,7 @@ func TestText(t *testing.T) {
 		html, want string
 	}{
 		{html: "<div>x</div>", want: "x"},
+		{html: "<div>x<br>y</div>", want: "x\ny"},
 		{html: "<div>x <style>y</style> z</div>", want: "x  z"},
 	}
 
@@ -31,4 +35,123 @@ func TestText(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHTML(t *testing.T) {
+	f, err := os.Open("HTML.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	root, err := html.Parse(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("FindEl", func(t *testing.T) {
+		el := FindEl(root, func(n *html.Node) bool {
+			return n.DataAtom == atom.Div && ElClassContains(n, "vector-pinnable-header-label")
+		})
+		if el == nil {
+			t.Fatal("no el")
+		}
+		got, err := Text(el)
+		if err != nil {
+			t.Fatal(err)
+		}
+		const want = "Main menu"
+		if got != want {
+			t.Errorf("got %s, want %s", got, want)
+		}
+	})
+
+	t.Run("FindAllEls", func(t *testing.T) {
+		var strs []string
+
+		err := FindAllEls(
+			root,
+			func(n *html.Node) bool {
+				return n.DataAtom == atom.Div && ElClassContains(n, "vector-pinnable-header-label")
+			},
+			func(n *html.Node) error {
+				s, err := Text(n)
+				if err != nil {
+					return err
+				}
+				strs = append(strs, s)
+				return nil
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		want := []string{
+			"Main menu",
+			"Tools",
+		}
+		if !reflect.DeepEqual(strs, want) {
+			t.Errorf("got %v, want %v", strs, want)
+		}
+	})
+
+	t.Run("Walk", func(t *testing.T) {
+		el := FindEl(root, func(n *html.Node) bool {
+			return n.DataAtom == atom.Li && ElAttr(n, "id") == "toc-HTML_5"
+		})
+		if el == nil {
+			t.Fatal("no el")
+		}
+		var atoms []atom.Atom
+		err := Walk(el, func(n *html.Node) error {
+			if n.Type == html.ElementNode {
+				atoms = append(atoms, n.DataAtom)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := []atom.Atom{atom.Li, atom.A, atom.Div, atom.Span, atom.Ul}
+		if !reflect.DeepEqual(atoms, want) {
+			t.Errorf("got %v, want %v", atoms, want)
+		}
+	})
+
+	t.Run("Prune", func(t *testing.T) {
+		table := FindEl(root, func(n *html.Node) bool {
+			return n.DataAtom == atom.Table && ElClassContains(n, "wikitable")
+		})
+		if table == nil {
+			t.Fatal("no table")
+		}
+
+		pruned := Prune(table, func(n *html.Node) bool {
+			return n.DataAtom == atom.Td
+		})
+
+		text, err := Text(pruned)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fields := strings.Fields(text)
+
+		want := []string{
+			"Example",
+			"HTML",
+			"Escape",
+			"Sequences",
+			"Named",
+			"Decimal",
+			"Hexadecimal",
+			"Result",
+			"Description",
+			"Notes",
+		}
+
+		if !reflect.DeepEqual(fields, want) {
+			t.Errorf("got %v, want %v", fields, want)
+		}
+	})
 }
