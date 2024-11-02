@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -38,7 +39,7 @@ func TestText(t *testing.T) {
 }
 
 func TestHTML(t *testing.T) {
-	f, err := os.Open("HTML.html")
+	f, err := os.Open("testdata/HTML.html")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,29 +70,22 @@ func TestHTML(t *testing.T) {
 	t.Run("FindAllEls", func(t *testing.T) {
 		var strs []string
 
-		err := FindAllEls(
-			root,
-			func(n *html.Node) bool {
-				return n.DataAtom == atom.Div && ElClassContains(n, "vector-pinnable-header-label")
-			},
-			func(n *html.Node) error {
-				s, err := Text(n)
-				if err != nil {
-					return err
-				}
-				strs = append(strs, s)
-				return nil
-			},
-		)
-		if err != nil {
-			t.Fatal(err)
+		seq := FindAllEls(root, func(n *html.Node) bool {
+			return n.DataAtom == atom.Div && ElClassContains(n, "vector-pinnable-header-label")
+		})
+		for n := range seq {
+			s, err := Text(n)
+			if err != nil {
+				t.Fatal(err)
+			}
+			strs = append(strs, s)
 		}
 
 		want := []string{
 			"Main menu",
 			"Tools",
 		}
-		if !reflect.DeepEqual(strs, want) {
+		if !slices.Equal(strs, want) {
 			t.Errorf("got %v, want %v", strs, want)
 		}
 	})
@@ -104,17 +98,13 @@ func TestHTML(t *testing.T) {
 			t.Fatal("no el")
 		}
 		var atoms []atom.Atom
-		err := Walk(el, func(n *html.Node) error {
+		for n := range Walk(el) {
 			if n.Type == html.ElementNode {
 				atoms = append(atoms, n.DataAtom)
 			}
-			return nil
-		})
-		if err != nil {
-			t.Fatal(err)
 		}
 		want := []atom.Atom{atom.Li, atom.A, atom.Div, atom.Span, atom.Ul}
-		if !reflect.DeepEqual(atoms, want) {
+		if !slices.Equal(atoms, want) {
 			t.Errorf("got %v, want %v", atoms, want)
 		}
 	})
