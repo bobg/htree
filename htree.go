@@ -4,6 +4,7 @@ package htree
 import (
 	"bytes"
 	"io"
+	"iter"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -35,23 +36,27 @@ func FindEl(node *html.Node, pred func(*html.Node) bool) *html.Node {
 	return Find(node, elPred(pred))
 }
 
-// Walk applies f to each node in a recursive, preorder, depth-first walk of `node`.
-// If any call to f produces an error, the walk is aborted and the error returned.
-func Walk(node *html.Node, f func(*html.Node) error) error {
-	err := f(node)
-	if err != nil {
-		return err
+// Walk produces an iterator over the nodes in the tree rooted at `node`
+// in a recursive, preorder, depth-first walk.
+func Walk(node *html.Node) iter.Seq[*html.Node] {
+	return func(yield func(*html.Node) bool) {
+		walk(node, yield)
 	}
+}
+
+func walk(node *html.Node, yield func(*html.Node) bool) bool {
 	if node.Type == html.TextNode {
-		return nil
+		return true
+	}
+	if !yield(node) {
+		return false
 	}
 	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		err = Walk(child, f)
-		if err != nil {
-			return err
+		if !walk(child, yield) {
+			return false
 		}
 	}
-	return nil
+	return true
 }
 
 // FindAll walks the tree rooted at `node` in preorder, depth-first fashion.
@@ -64,25 +69,38 @@ func Walk(node *html.Node, f func(*html.Node) error) error {
 //
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call FindAllChildren(n, pred, f) in the body of `f`.
-func FindAll(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
-	if pred(node) {
-		return f(node)
+func FindAll(node *html.Node, pred func(*html.Node) bool) iter.Seq[*html.Node] {
+	return func(yield func(*html.Node) bool) {
+		findAll(node, pred, yield)
 	}
-	return FindAllChildren(node, pred, f)
+}
+
+func findAll(node *html.Node, pred func(*html.Node) bool, yield func(*html.Node) bool) bool {
+	if pred(node) {
+		if !yield(node) {
+			return false
+		}
+	}
+	return findAllChildren(node, pred, yield)
 }
 
 // FindAllChildren is the same as FindAll but operates only on the children of `node`, not `node` itself.
-func FindAllChildren(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
+func FindAllChildren(node *html.Node, pred func(*html.Node) bool) iter.Seq[*html.Node] {
+	return func(yield func(*html.Node) bool) {
+		findAllChildren(node, pred, yield)
+	}
+}
+
+func findAllChildren(node *html.Node, pred func(*html.Node) bool, yield func(*html.Node) bool) bool {
 	if node.Type == html.TextNode {
-		return nil
+		return true
 	}
 	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		err := FindAll(child, pred, f)
-		if err != nil {
-			return err
+		if !findAll(child, pred, yield) {
+			return false
 		}
 	}
-	return nil
+	return true
 }
 
 // FindAllEls is like FindAll but calls `pred`, and perhaps `f`,
@@ -90,13 +108,13 @@ func FindAllChildren(node *html.Node, pred func(*html.Node) bool, f func(*html.N
 //
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call FindAllChildEls(n, pred, f) in the body of `f`.
-func FindAllEls(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
-	return FindAll(node, elPred(pred), f)
+func FindAllEls(node *html.Node, pred func(*html.Node) bool) iter.Seq[*html.Node] {
+	return FindAll(node, elPred(pred))
 }
 
 // FindAllChildEls is the same as FindAllEls but operates only on the children of `node`, not `node` itself.
-func FindAllChildEls(node *html.Node, pred func(*html.Node) bool, f func(*html.Node) error) error {
-	return FindAllChildren(node, elPred(pred), f)
+func FindAllChildEls(node *html.Node, pred func(*html.Node) bool) iter.Seq[*html.Node] {
+	return FindAllChildren(node, elPred(pred))
 }
 
 // elPred takes a predicate function of a node and returns a new predicate
