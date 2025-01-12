@@ -89,9 +89,7 @@ func FindAll(tree *html.Node, pred func(*html.Node) bool) Seq {
 
 func findAll(node *html.Node, pred func(*html.Node) bool, yield func(*html.Node) bool) bool {
 	if pred(node) {
-		if !yield(node) {
-			return false
-		}
+		return yield(node)
 	}
 	return findAllChildren(node, pred, yield)
 }

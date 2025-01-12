@@ -144,4 +144,29 @@ func TestHTML(t *testing.T) {
 			t.Errorf("got %v, want %v", fields, want)
 		}
 	})
+
+	t.Run("FindAllChildEls", func(t *testing.T) {
+		bodyEl := FindEl(root, func(n *html.Node) bool { return n.DataAtom == atom.Body })
+		if bodyEl == nil {
+			t.Fatal("no body")
+		}
+
+		var (
+			seq = FindAllChildEls(bodyEl, func(n *html.Node) bool { return n.DataAtom == atom.Div })
+			got []string
+		)
+		for n := range seq {
+			got = append(got, ElAttr(n, "class"))
+		}
+
+		want := []string{
+			"vector-header-container",
+			"mw-page-container",
+			"vector-settings",
+		}
+
+		if !slices.Equal(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
 }
