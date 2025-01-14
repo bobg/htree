@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bobg/seqs"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -65,6 +66,35 @@ func TestHTML(t *testing.T) {
 		if got != want {
 			t.Errorf("got %s, want %s", got, want)
 		}
+	})
+
+	t.Run("NilPred", func(t *testing.T) {
+		t.Run("NilPred", func(t *testing.T) {
+			el := FindEl(root, func(n *html.Node) bool {
+				return n.DataAtom == atom.Div && ElClassContains(n, "vector-main-menu")
+			})
+			if el == nil {
+				t.Fatal("no el")
+			}
+			got := FindEl(el, nil)
+			if got != el {
+				t.Errorf("got %v, want %v", got, el)
+			}
+
+			children := FindAllChildEls(el, nil)
+			gotClasses := slices.Collect(seqs.Map(children, func(n *html.Node) string {
+				return ElAttr(n, "class")
+			}))
+			wantClasses := []string{
+				"vector-pinnable-header vector-main-menu-pinnable-header vector-pinnable-header-unpinned",
+				"vector-menu mw-portlet mw-portlet-navigation",
+				"vector-menu mw-portlet mw-portlet-interaction",
+				"vector-main-menu-action vector-main-menu-action-lang-alert",
+			}
+			if !slices.Equal(gotClasses, wantClasses) {
+				t.Errorf("got %v, want %v", gotClasses, wantClasses)
+			}
+		})
 	})
 
 	t.Run("FindAllEls", func(t *testing.T) {

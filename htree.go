@@ -18,7 +18,7 @@ type Seq = iter.Seq[*html.Node]
 // in a depth-first search of the given tree,
 // satisfying the given predicate.
 func Find(tree *html.Node, pred func(*html.Node) bool) *html.Node {
-	if pred(tree) {
+	if pred == nil || pred(tree) {
 		return tree
 	}
 	if tree.Type == html.TextNode {
@@ -88,7 +88,7 @@ func FindAll(tree *html.Node, pred func(*html.Node) bool) Seq {
 }
 
 func findAll(node *html.Node, pred func(*html.Node) bool, yield func(*html.Node) bool) bool {
-	if pred(node) {
+	if pred == nil || pred(node) {
 		return yield(node)
 	}
 	return findAllChildren(node, pred, yield)
@@ -144,7 +144,7 @@ func FindAllChildEls(node *html.Node, pred func(*html.Node) bool) Seq {
 // that is true only if the node has type `ElementNode` and passes the original predicate.
 func elPred(pred func(*html.Node) bool) func(*html.Node) bool {
 	return func(n *html.Node) bool {
-		return n.Type == html.ElementNode && pred(n)
+		return n.Type == html.ElementNode && (pred == nil || pred(n))
 	}
 }
 
@@ -217,7 +217,7 @@ func Text(node *html.Node) (string, error) {
 // minus any subnodes that cause the supplied predicate to return true.
 // If `node` itself is pruned, the return value is nil.
 func Prune(node *html.Node, pred func(*html.Node) bool) *html.Node {
-	if pred(node) {
+	if pred == nil || pred(node) {
 		return nil
 	}
 

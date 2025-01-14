@@ -1,6 +1,10 @@
-github.com/bobg/go-generics/v4 v4.1.1 h1:At0uu6D/VksvjPjxvYbWs3k4X1/aAFiTapr3kuiuuiM=
-github.com/bobg/go-generics/v4 v4.1.1/go.mod h1:Oj7bxNHiEkq1PaCYmVA/dduJOsFnPnGV93NTkSrASI0=
+github.com/bobg/go-generics/v4 v4.1.2 h1:iF62T5EypncG3kTYFTWzBgfZlwCgm84tUboY9TKZT+4=
+github.com/bobg/go-generics/v4 v4.1.2/go.mod h1:KVwpxEYErjvcqjJSJqVNZd/JEq3SsQzb9t01+82pZGw=
+github.com/bobg/seqs v1.5.2 h1:QXwmpT3tfMgdG1oPE4FvM2NAI3zAyuN1r+FA1hLmyE8=
+github.com/bobg/seqs v1.5.2/go.mod h1:Iw4ESqX24EovuZ+0UHrnPmHYK1UyO9jcAZpPIzlNMa0=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/mattn/go-sqlite3 v1.14.22 h1:2gZY6PC6kBnID23Tichd1K+Z0oS6nE/XwU+Vz/5o4kU=
+github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 golang.org/x/net v0.34.0 h1:Mb7Mrk043xzHgnRM88suvJFwzVrRfHEHJEl5/71CKw0=
 golang.org/x/net v0.34.0/go.mod h1:di0qlW3YNM5oh6GqDGQr92MyTozJPmybPK4Ev/Gm31k=
