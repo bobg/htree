@@ -185,7 +185,7 @@ func indent(w *bolwriter, n *html.Node, level int) error {
 }
 
 var (
-	blockElements = set.New[atom.Atom](
+	blockElements = set.New(
 		atom.Address, atom.Article, atom.Aside, atom.Blockquote, atom.Body,
 		atom.Details, atom.Dialog, atom.Dd, atom.Div, atom.Dl, atom.Dt,
 		atom.Fieldset, atom.Figcaption, atom.Figure, atom.Footer, atom.Form,
@@ -194,11 +194,11 @@ var (
 		atom.Section, atom.Summary, atom.Table, atom.Ul,
 	)
 
-	literalChildElements = set.New[atom.Atom](
+	literalChildElements = set.New(
 		atom.Iframe, atom.Noembed, atom.Noframes, atom.Noscript, atom.Plaintext, atom.Script, atom.Style, atom.Xmp,
 	)
 
-	voidElements = set.New[atom.Atom](
+	voidElements = set.New(
 		atom.Area, atom.Base, atom.Br, atom.Col, atom.Embed, atom.Hr,
 		atom.Img, atom.Input, atom.Keygen, atom.Link, atom.Meta,
 		atom.Param, atom.Source, atom.Track, atom.Wbr,

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"iter"
+	"slices"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -17,6 +18,8 @@ type Seq = iter.Seq[*html.Node]
 // Find finds the first node,
 // in a depth-first search of the given tree,
 // satisfying the given predicate.
+//
+// If pred is nil, it matches all nodes and Find returns `tree` itself.
 func Find(tree *html.Node, pred func(*html.Node) bool) *html.Node {
 	if pred == nil || pred(tree) {
 		return tree
@@ -35,6 +38,8 @@ func Find(tree *html.Node, pred func(*html.Node) bool) *html.Node {
 // FindEl finds the first `ElementNode`-typed node,
 // in a depth-first search of the tree,
 // satisfying the given predicate.
+//
+// If pred is nil, it matches all element nodes.
 func FindEl(tree *html.Node, pred func(*html.Node) bool) *html.Node {
 	return Find(tree, elPred(pred))
 }
@@ -81,6 +86,9 @@ func walk(node *html.Node, yield func(*html.Node) bool) bool {
 //	    doSomething(child, pred)
 //	  }
 //	}
+//
+// If pred is nil, it matches all nodes,
+// meaning that FindAll returns a sequence containing only tree.
 func FindAll(tree *html.Node, pred func(*html.Node) bool) Seq {
 	return func(yield func(*html.Node) bool) {
 		findAll(tree, pred, yield)
@@ -101,6 +109,9 @@ func findAll(node *html.Node, pred func(*html.Node) bool, yield func(*html.Node)
 // the children of a node that passes `pred` are skipped.
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call `FindAllChildren(n, pred)`.
+//
+// If pred is nil, it matches all nodes,
+// meaning that FindAllChildren returns a sequence containing only node's children.
 func FindAllChildren(node *html.Node, pred func(*html.Node) bool) Seq {
 	return func(yield func(*html.Node) bool) {
 		findAllChildren(node, pred, yield)
@@ -125,6 +136,8 @@ func findAllChildren(node *html.Node, pred func(*html.Node) bool, yield func(*ht
 // the children of a node that passes `pred` are skipped.
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call `FindAllChildEls(n, pred)`.
+//
+// If pred is nil, it matches all element nodes.
 func FindAllEls(node *html.Node, pred func(*html.Node) bool) Seq {
 	return FindAll(node, elPred(pred))
 }
@@ -136,6 +149,8 @@ func FindAllEls(node *html.Node, pred func(*html.Node) bool) Seq {
 // the children of a node that passes `pred` are skipped.
 // To continue walking the subtree of a node `n` that passes `pred`,
 // call `FindAllChildEls(n, pred)`.
+//
+// If pred is nil, it matches all element nodes.
 func FindAllChildEls(node *html.Node, pred func(*html.Node) bool) Seq {
 	return FindAllChildren(node, elPred(pred))
 }
@@ -162,12 +177,7 @@ func ElAttr(node *html.Node, key string) string {
 // containing the class name `probe`.
 func ElClassContains(node *html.Node, probe string) bool {
 	classes := strings.Fields(ElAttr(node, "class"))
-	for _, c := range classes {
-		if c == probe {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(classes, probe)
 }
 
 // WriteText converts the content of the tree rooted at `node` into plain text
@@ -216,6 +226,8 @@ func Text(node *html.Node) (string, error) {
 // Prune returns a copy of `node` and its children,
 // minus any subnodes that cause the supplied predicate to return true.
 // If `node` itself is pruned, the return value is nil.
+// If pred is nil, it matches all nodes,
+// meaning that Prune returns nil.
 func Prune(node *html.Node, pred func(*html.Node) bool) *html.Node {
 	if pred == nil || pred(node) {
 		return nil
